@@ -1,10 +1,10 @@
 const express = require('express')
 const app = express()
 const port = 3000
-const getDataAndCSV = require('./index.js');
+// const getDataAndCSV = require('./index.js');
 
 app.get('/', (req, res) => {
-  getDataAndCSV();
+  // getDataAndCSV();
   res.sendFile('views/index.html', {root: __dirname})
 })
 

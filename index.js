@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
 const getData = async () => {
-    const browser = await puppeteer.launch({args:['--start-maximized']});
+    const browser = await puppeteer.launch({args:['--start-maximized'], headless: false, ignoreHTTPSErrors: true});
     const page = await browser.newPage();
     await page.goto('https://www.playcrey.com/play/MostPlayed');
     await page.setViewport({ width: 1366, height: 768});
@@ -19,6 +19,43 @@ const getData = async () => {
     let pagesData = [];
     for (let enlace of links) {
         await page.goto(enlace, { waitUntil: 'networkidle0' });
+        // Function to wait for the selector to appear on the page
+        const waitForSelector = async (selector) => {
+            await page.waitForSelector(selector);
+        };
+
+        // Function to scroll to the end of the document
+        const scrollToBottom = async () => {
+            await page.evaluate(() => {
+            window.scrollTo(0, document.body.scrollHeight);
+            });
+        };
+
+        // Function to check if the button with class "loadMoreButton" exists
+        const isLoadMoreButtonVisible = async () => {
+            const loadMoreButton = await page.$('.LoadMoreButton--s207pg.ecknSK');
+            return loadMoreButton !== null;
+        };
+
+        // Scroll to the end of the document and click the "loadMoreButton" if it exists
+        const scrollAndClickLoadMoreButton = async () => {
+            await scrollToBottom();
+            const isButtonVisible = await isLoadMoreButtonVisible();
+            if (isButtonVisible) {
+            await page.evaluate(() => {
+                const loadMoreButton = document.querySelector('.LoadMoreButton--s207pg.ecknSK');
+                loadMoreButton.click();
+            });
+            await scrollAndClickLoadMoreButton(); // Recursively check for more buttons
+            } else {
+            console.log("I did it");
+            }
+        };
+
+        // Wait for the selector "p.body-text" to appear, then scroll and click the "loadMoreButton"
+        await waitForSelector('p.body-text');
+        await scrollAndClickLoadMoreButton();
+        
         pagesData.push(await page.evaluate(() => {
             pageData = {};
             pageData.gameData = {};
@@ -104,5 +141,7 @@ const getDataAndCSV = async ()=> {
     EliFunction(comments.flat(), 'comments');
     EliFunction(games.flat(), 'games');
 }
+
+getDataAndCSV();
 
 module.exports = getDataAndCSV;
