@@ -1,10 +1,11 @@
 const puppeteer = require('puppeteer');
 
 (async () => {
-  const browser = await puppeteer.launch({args:['--start-maximized'], headless: false, ignoreHTTPSErrors: true});
+  const browser = await puppeteer.launch({headless: false});
   const page = await browser.newPage();
+
+  await page.goto('https://www.playcrey.com/game/262702');
   await page.setViewport({ width: 1366, height: 768});
-  await page.goto('https://www.playcrey.com/game/116349');
 
   // Function to wait for the selector to appear on the page
   const waitForSelector = async (selector) => {
@@ -29,9 +30,12 @@ const puppeteer = require('puppeteer');
     await scrollToBottom();
     const isButtonVisible = await isLoadMoreButtonVisible();
     if (isButtonVisible) {
+      await page.waitForTimeout(1000); // Adjust the delay as needed
       await page.evaluate(() => {
         const loadMoreButton = document.querySelector('.LoadMoreButton--s207pg.ecknSK');
-        loadMoreButton.click();
+        if (loadMoreButton) {
+            loadMoreButton.click();
+        }
       });
       await scrollAndClickLoadMoreButton(); // Recursively check for more buttons
     } else {
@@ -42,6 +46,6 @@ const puppeteer = require('puppeteer');
   // Wait for the selector "p.body-text" to appear, then scroll and click the "loadMoreButton"
   await waitForSelector('p.body-text');
   await scrollAndClickLoadMoreButton();
-  
+
   await browser.close();
 })();

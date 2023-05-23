@@ -19,6 +19,7 @@ const getData = async () => {
     let pagesData = [];
     for (let enlace of links) {
         await page.goto(enlace, { waitUntil: 'networkidle0' });
+
         // Function to wait for the selector to appear on the page
         const waitForSelector = async (selector) => {
             await page.waitForSelector(selector);
@@ -42,9 +43,12 @@ const getData = async () => {
             await scrollToBottom();
             const isButtonVisible = await isLoadMoreButtonVisible();
             if (isButtonVisible) {
+            await page.waitForTimeout(1000); // Adjust the delay as needed
             await page.evaluate(() => {
                 const loadMoreButton = document.querySelector('.LoadMoreButton--s207pg.ecknSK');
-                loadMoreButton.click();
+                if (loadMoreButton) {
+                    loadMoreButton.click();
+                }
             });
             await scrollAndClickLoadMoreButton(); // Recursively check for more buttons
             } else {
@@ -55,6 +59,7 @@ const getData = async () => {
         // Wait for the selector "p.body-text" to appear, then scroll and click the "loadMoreButton"
         await waitForSelector('p.body-text');
         await scrollAndClickLoadMoreButton();
+
         
         pagesData.push(await page.evaluate(() => {
             pageData = {};
@@ -64,29 +69,31 @@ const getData = async () => {
             aux.gameData = [];
 
             pageData.gameData.gameTitle = document.querySelector('.GameTitle--1bsl3h6')?.innerText;
-            pageData.gameData.gameId = document.URL.split('/').slice(-1)[0];
+            pageData.gameData.gameId = document.URL?.split('/').slice(-1)[0];
             pageData.gameData.gameCreator = document.querySelector('.CreatorName--1yloycb span')?.innerText;
-            pageData.gameData.gameCreatorId = document.querySelector(".ProfileWrapper--1flmfhj.fLBrjQ > a").href.split('/').slice(-1)[0];
+            pageData.gameData.gameCreatorId = document.querySelector(".ProfileWrapper--1flmfhj.fLBrjQ > a")?.href.split('/').slice(-1)[0];
             pageData.gameData.numPlays = document.querySelector('.GameInfos--1l73nut.jQsNle div:nth-child(2) span')?.innerText.split(' ')[0];
-            pageData.gameData.numLikes = document.querySelector(".sc-ftTHYK.bbOCCx.StyledLikeButton--5zu5oc.heOSga > span").innerText.split(' ')[0];
+            pageData.gameData.numLikes = document.querySelector(".sc-ftTHYK.bbOCCx.StyledLikeButton--5zu5oc.heOSga > span")?.innerText.split(' ')[0];
             pageData.gameData.isMultiplayer = document.querySelector('.GameInfoDataWrapper--1y8mrvj.hMkHRj span')?.innerText?.toLowerCase() === 'multiplayer';
             pageData.gameData.isSingleplayer = document.querySelector('.GameInfoDataWrapper--1y8mrvj.hMkHRj span')?.innerText?.toLowerCase() === 'singleplayer';
             pageData.gameData.numComments = document.querySelector('sc-dkrFOg.bvPVyW.StyledHeadline--7dub8s.cHgJxq span')?.innerText;
             aux.gameData.push(pageData.gameData);
             for(comentario of document.querySelectorAll('.CommentContainer--16aic79.hIrtdg')) {
                 commentData = {};
-                commentData.gameId = document.querySelector("li.user-menu-item a").href.split('/').slice(-1)[0];
+                commentData.gameId = document.querySelector("li.user-menu-item a")?.href.split('/').slice(-1)[0];
                 commentData.gameTitle = document.querySelector('.GameTitle--1bsl3h6')?.innerText;
                 commentData.comment = comentario.querySelector("p.body-text")?.innerText;
                 commentData.commentCreator = comentario.querySelector("div a")?.innerText;
-                commentData.commentCreatorId = comentario.querySelector("div a").href.split('/').slice(-1)[0];
-                commentData.commentTime = comentario.querySelector("div > span time").getAttribute('datetime');
+                commentData.commentCreatorId = comentario.querySelector("div a")?.href.split('/').slice(-1)[0];
+                commentData.commentTime = comentario.querySelector("div > span time")?.getAttribute('datetime');
                 aux.commentData.push(commentData);
                 commentData = {};
             };
             return aux;
         }));
+        await console.log('se aniade, total: ', pagesData.length)
     }
+    await console.log(pagesData.length)
     await browser.close();
     return pagesData;
 };
