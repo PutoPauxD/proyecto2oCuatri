@@ -17,119 +17,114 @@ const getData = async () => {
         return links;
     });
     let pagesData = [];
+    const numMaximoPages = 5;
+    let i = 0;
     for (let enlace of links) {
-        await page.goto(enlace, { waitUntil: 'networkidle0' });
-
-        // Function to wait for the selector to appear on the page
-        const waitForSelector = async (selector) => {
-            await page.waitForSelector(selector);
-        };
-
-        // Function to scroll to the end of the document
-        const scrollToBottom = async () => {
-            await page.evaluate(() => {
-            window.scrollTo(0, document.body.scrollHeight);
-            });
-        };
-
-        // Function to check if the button with class "loadMoreButton" exists
-        const isLoadMoreButtonVisible = async () => {
-            const loadMoreButton = await page.$('.LoadMoreButton--s207pg.ecknSK');
-            return loadMoreButton !== null;
-        };
-
-        // Scroll to the end of the document and click the "loadMoreButton" if it exists
-        const scrollAndClickLoadMoreButton = async () => {
-            await scrollToBottom();
-            const isButtonVisible = await isLoadMoreButtonVisible();
-            if (isButtonVisible) {
-            await page.waitForTimeout(1000); // Adjust the delay as needed
-            await page.evaluate(() => {
-                const loadMoreButton = document.querySelector('.LoadMoreButton--s207pg.ecknSK');
-                if (loadMoreButton) {
-                    loadMoreButton.click();
-                }
-            });
-            await scrollAndClickLoadMoreButton(); // Recursively check for more buttons
-            } else {
-            console.log("I did it");
-            }
-        };
-
-        // Wait for the selector "p.body-text" to appear, then scroll and click the "loadMoreButton"
-        await waitForSelector('p.body-text');
-        await scrollAndClickLoadMoreButton();
-
-        
-        pagesData.push(await page.evaluate(() => {
-            pageData = {};
-            pageData.gameData = {};
-            aux = {};
-            aux.commentData = [];
-            aux.gameData = [];
-
-            pageData.gameData.gameTitle = document.querySelector('.GameTitle--1bsl3h6')?.innerText;
-            pageData.gameData.gameId = document.URL?.split('/').slice(-1)[0];
-            pageData.gameData.gameCreator = document.querySelector('.CreatorName--1yloycb span')?.innerText;
-            pageData.gameData.gameCreatorId = document.querySelector(".ProfileWrapper--1flmfhj.fLBrjQ > a")?.href.split('/').slice(-1)[0];
-            pageData.gameData.numPlays = document.querySelector('.GameInfos--1l73nut.jQsNle div:nth-child(2) span')?.innerText.split(' ')[0];
-            pageData.gameData.numLikes = document.querySelector(".sc-ftTHYK.bbOCCx.StyledLikeButton--5zu5oc.heOSga > span")?.innerText.split(' ')[0];
-            pageData.gameData.isMultiplayer = document.querySelector('.GameInfoDataWrapper--1y8mrvj.hMkHRj span')?.innerText?.toLowerCase() === 'multiplayer';
-            pageData.gameData.isSingleplayer = document.querySelector('.GameInfoDataWrapper--1y8mrvj.hMkHRj span')?.innerText?.toLowerCase() === 'singleplayer';
-            pageData.gameData.numComments = document.querySelector('sc-dkrFOg.bvPVyW.StyledHeadline--7dub8s.cHgJxq span')?.innerText;
-            aux.gameData.push(pageData.gameData);
-            for(comentario of document.querySelectorAll('.CommentContainer--16aic79.hIrtdg')) {
-                commentData = {};
-                commentData.gameId = document.querySelector("li.user-menu-item a")?.href.split('/').slice(-1)[0];
-                commentData.gameTitle = document.querySelector('.GameTitle--1bsl3h6')?.innerText;
-                commentData.comment = comentario.querySelector("p.body-text")?.innerText;
-                commentData.commentCreator = comentario.querySelector("div a")?.innerText;
-                commentData.commentCreatorId = comentario.querySelector("div a")?.href.split('/').slice(-1)[0];
-                commentData.commentTime = comentario.querySelector("div > span time")?.getAttribute('datetime');
-                aux.commentData.push(commentData);
-                commentData = {};
+        if (i < numMaximoPages) {
+            await page.goto(enlace, { waitUntil: 'networkidle0' });
+            
+            const waitForSelector = async (selector) => {
+                await page.waitForSelector(selector);
             };
-            return aux;
-        }));
-        await console.log('se aniade, total: ', pagesData.length)
+            
+            const scrollToBottom = async () => {
+                await page.evaluate(() => {
+                    window.scrollTo(0, document.body.scrollHeight);
+                });
+            };
+            
+            const isLoadMoreButtonVisible = async () => {
+                const loadMoreButton = await page.$('.LoadMoreButton--s207pg.ecknSK');
+                return loadMoreButton !== null;
+            };
+            
+            const scrollAndClickLoadMoreButton = async () => {
+                await scrollToBottom();
+                const isButtonVisible = await isLoadMoreButtonVisible();
+                if (isButtonVisible) {
+                    await page.waitForTimeout(2000); // Adjust the delay as needed
+                    await page.evaluate(() => {
+                        const loadMoreButton = document.querySelector('.LoadMoreButton--s207pg.ecknSK');
+                        if (loadMoreButton) {
+                            loadMoreButton.click();
+                        }
+                    });
+                    await scrollAndClickLoadMoreButton(); // Recursively check for more buttons
+                } else {
+                    console.log("I did it");
+                }
+            };
+            
+            await waitForSelector('p.body-text');
+            await scrollAndClickLoadMoreButton();
+            
+            
+            pagesData.push(await page.evaluate(() => {
+                pageData = {};
+                pageData.gameData = {};
+                aux = {};
+                aux.commentData = [];
+                aux.gameData = [];
+                
+                pageData.gameData.gameTitle = document.querySelector('.GameTitle--1bsl3h6')?.innerText;
+                pageData.gameData.gameId = document.URL?.split('/').slice(-1)[0];
+                pageData.gameData.gameCreator = document.querySelector('.CreatorName--1yloycb span')?.innerText;
+                pageData.gameData.gameCreatorId = document.querySelector(".ProfileWrapper--1flmfhj.fLBrjQ > a")?.href.split('/').slice(-1)[0];
+                pageData.gameData.numPlays = document.querySelector('.GameInfos--1l73nut.jQsNle div:nth-child(2) span')?.innerText.split(' ')[0];
+                pageData.gameData.numLikes = document.querySelector(".sc-ftTHYK.bbOCCx.StyledLikeButton--5zu5oc.heOSga > span")?.innerText.split(' ')[0];
+                pageData.gameData.isMultiplayer = document.querySelector('.GameInfoDataWrapper--1y8mrvj.hMkHRj span')?.innerText?.toLowerCase() === 'multiplayer';
+                pageData.gameData.isSingleplayer = document.querySelector('.GameInfoDataWrapper--1y8mrvj.hMkHRj span')?.innerText?.toLowerCase() === 'singleplayer';
+                pageData.gameData.numComments = document.querySelector('sc-dkrFOg.bvPVyW.StyledHeadline--7dub8s.cHgJxq span')?.innerText;
+                aux.gameData.push(pageData.gameData);
+                for(comentario of document.querySelectorAll('.CommentContainer--16aic79.hIrtdg')) {
+                    commentData = {};
+                    commentData.gameId = document.querySelector("li.user-menu-item a")?.href.split('/').slice(-1)[0];
+                    commentData.gameTitle = document.querySelector('.GameTitle--1bsl3h6')?.innerText;
+                    commentData.comment = comentario.querySelector("p.body-text")?.innerText;
+                    commentData.commentCreator = comentario.querySelector("div a")?.innerText;
+                    commentData.commentCreatorId = comentario.querySelector("div a")?.href.split('/').slice(-1)[0];
+                    commentData.commentTime = comentario.querySelector("div > span time")?.getAttribute('datetime');
+                    aux.commentData.push(commentData);
+                    commentData = {};
+                } 
+                return aux;
+            }));
+            i ++;
+            await console.log(i);
+        };
     }
-    await console.log(pagesData.length)
     await browser.close();
     return pagesData;
 };
 
-// TO CSV
-
-const EliFunction = (data, filename) => {
-    // Definir la ruta y el nombre del archivo CSV
+const generateCSV = (data, filename) => {
     let header = [];
     if (filename == 'comments') {
         header = [
-            {id: 'gameId', title: 'Id del juego'},
-            {id: 'gameTitle', title: 'Titulo del juego'},
+            {id: 'gameId', title: 'IdJuego'},
+            {id: 'gameTitle', title: 'TituloJuego'},
             {id: 'comment', title: 'Comentario'},
-            {id: 'commentCreator', title: 'Creador del comentario'},
-            {id: 'commentCreatorId', title: 'Id del creador del comentario'},
-            {id: 'commentTime', title: 'Fecha de publicacion del comentario'},
+            {id: 'commentCreator', title: 'CreadorComentario'},
+            {id: 'commentCreatorId', title: 'IdComentarista'},
+            {id: 'commentTime', title: 'FechaComentario'},
         ]
     } else {
         header = [
-            { id: 'gameTitle', title: 'Titulo del juego' },
-            { id: 'gameId', title: 'Id del juego' },
-            { id: 'gameCreator', title: 'Creador del juego' },
-            { id: 'gameCreatorId', title: 'Id del creador del juego' },
-            { id: 'numPlays', title: 'Num veces jugado' },
-            { id: 'numLikes', title: 'Num Likes' },
+            { id: 'gameTitle', title: 'TituloJuego' },
+            { id: 'gameId', title: 'IdJuego' },
+            { id: 'gameCreator', title: 'CreadorJuego' },
+            { id: 'gameCreatorId', title: 'IdJuego' },
+            { id: 'numPlays', title: 'VecesJugado' },
+            { id: 'numLikes', title: 'Likes' },
             { id: 'isMultiplayer', title: 'Multijugador' },
-            { id: 'isSingleplayer', title: 'Un jugador' },
+            { id: 'isSingleplayer', title: 'UnJugador' },
         ]
     }
     const csvWriter = createCsvWriter({
     path: filename + '.csv',
-    header: header
+    header: header,
     });
 
-    // Escribir los datos en el archivo CSV
     csvWriter
     .writeRecords(data)
     .then(() => console.log('El archivo CSV ha sido guardado exitosamente.'))
@@ -145,10 +140,8 @@ const getDataAndCSV = async ()=> {
         comments.push(oneGameData.commentData);
     }
     console.log(games)
-    EliFunction(comments.flat(), 'comments');
-    EliFunction(games.flat(), 'games');
+    generateCSV(comments.flat(), 'comments');
+    generateCSV(games.flat(), 'games');
 }
 
 getDataAndCSV();
-
-module.exports = getDataAndCSV;
